@@ -27,6 +27,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -75,7 +76,6 @@ var additionalHosts []string
 var additionalIPs []string
 var passwordPath string
 var passwordStorePath string
-
 
 func getServersFromKnownHosts(homedir string, domain string, additionalHosts []string) (map[string]string, error) {
 	dat, err := ioutil.ReadFile(homedir + "/.ssh/known_hosts")
@@ -128,13 +128,11 @@ func getCredentials(passwordPath string) (string, string, error) {
 	return matches[1], lines[0], nil
 }
 
-func createVPNFolder(domain string, ips []string) (string, error) {
-	confDir := filepath.Join("/tmp/scripts-vpn/", domain)
+func createVPNFolder(confDir string, pidPath string, domain string, ips []string) (string, error) {
 	if err := os.MkdirAll(confDir, 0700); err != nil {
 		return "", fmt.Errorf("could not create temporary config dir for OpenVPN: %w", err)
 	}
 
-	//domains.ReadFile(filepath.Join(domain, ""))
 	names, err := domains.ReadDir(filepath.Join("domains", domain))
 	if err != nil {
 		return "", fmt.Errorf("could not list files from domains (recompile needed): %w", err)
@@ -151,17 +149,13 @@ func createVPNFolder(domain string, ips []string) (string, error) {
 		}
 	}
 
-	// openvpn --daemon openvpn-$1 --writepid /var/run/openvpn-client/$1.pid --suppress-timestamps --nobind --cd /etc/openvpn/client/ --config $1.conf --auth-user-pass <(echo -e "$2\n$3")' "bash" "$vpnname" "$username" "$password
-
 	// Adjust config and write to dir
 	config, err := domains.ReadFile(filepath.Join("domains", domain, confFilename))
 	if err != nil {
 		return "", fmt.Errorf("could not read config file from domains (recompile needed): %w", err)
 	}
 
-
-
-	config = append([]byte(fmt.Sprintf("daemon openvpn-%s\ncd %s\nwritepid lock.pid\nsuppress-timestamps\nnobind\nauth-user-pass creds.txt\n\n", domain, confDir)), config...)
+	config = append([]byte(fmt.Sprintf("daemon openvpn-%s\ncd %s\nwritepid %s\nsuppress-timestamps\nnobind\nauth-user-pass creds.txt\n\n", domain, confDir, pidPath)), config...)
 
 	config = append(config, []byte("\nroute-nopull\n")...)
 	for _, ip := range ips {
@@ -183,7 +177,6 @@ func createVPNFolder(domain string, ips []string) (string, error) {
 
 	}
 
-
 	return confDir, nil
 }
 
@@ -197,7 +190,39 @@ func exactAndValidArgs(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+const pidBasePath = "/var/run/openvpn-client/"
+
+func getPid(pidPath string) (int64, error) {
+	if _, err := os.Stat(pidPath); os.IsNotExist(err) {
+		return -1, nil
+	} else {
+		pidF, err := os.ReadFile(pidPath)
+		if err != nil {
+			return 0, fmt.Errorf("cannot read file %s : %w", pidPath, err)
+		}
+
+		pid, err := strconv.ParseInt(strings.Trim(string(pidF), "\n "), 10, 0)
+		if err != nil {
+			return 0, fmt.Errorf("cannot parse pid, got %s expected integer : %w", pidF, err)
+		}
+		return pid, nil
+	}
+}
+
 func startVPN(domain string) error {
+	confDir := filepath.Join("/tmp/scripts-vpn/", domain)
+	pidPath := filepath.Join(confDir, "lock.pid")
+
+	pid, err := getPid(pidPath)
+	if err != nil {
+		return fmt.Errorf("cannot check pid of potenially running openvpn instance: %w", err)
+	}
+
+	if pid != -1 {
+		fmt.Printf("A VPN instance for %s seems to be already running (with pid %d)\n", domain, pid)
+		return nil
+	}
+
 	fmt.Println("Starting VPN...")
 	homedir, err := os.UserHomeDir()
 	if err != nil {
@@ -207,7 +232,7 @@ func startVPN(domain string) error {
 	if err != nil {
 		return fmt.Errorf("could not get hosts: %w", err)
 	}
-	ips := make([]string, 0, len(servers)  + len(additionalIPs))
+	ips := make([]string, 0, len(servers)+len(additionalIPs))
 	ips = append(ips, additionalIPs...)
 
 	fmt.Println("Using servers:")
@@ -262,8 +287,7 @@ func startVPN(domain string) error {
 	}
 	fmt.Printf("Got credentials from %s\n", passwordPath)
 
-
-	confPath, err := createVPNFolder(domain, ips)
+	confPath, err := createVPNFolder(confDir, pidPath, domain, ips)
 	if err != nil {
 		return fmt.Errorf("could not create config folder: %w", err)
 	}
@@ -280,57 +304,57 @@ func startVPN(domain string) error {
 		return fmt.Errorf("could not gain super user priviliges: %w", err)
 	}
 
-	// openvpn --daemon openvpn-$1 --writepid /var/run/openvpn-client/$1.pid --suppress-timestamps --nobind --cd /etc/openvpn/client/ --config $1.conf --auth-user-pass <(echo -e "$2\n$3")' "bash" "$vpnname" "$username" "$password
-
-
-
-	//openvpnCmd := exec.Command("openvpn", "--daemon", fmt.Sprintf("openvpn-%s", domain), "--writepid", filepath.Join(confPath, fmt.Sprintf("%s.pid", domain)), "--suppress-timestamps", "--nobind", "--cd", confPath, "--config", "conf.ovpn")
 	openvpnCmd := exec.Command("sudo", "openvpn", "--config", filepath.Join(confPath, "conf.ovpn"), "--auth-user-pass", "creds.txt")
-	//openvpnCmd := exec.Command("cat")
-
-
-
-	//stdin, err := openvpnCmd.StdinPipe()
+	err = openvpnCmd.Run()
 	if err != nil {
-		return fmt.Errorf("could not create stdin pipe for openvpn process: %w", err)
-	}
-	//go func() {
-	//	// TODO errors
-	//	defer stdin.Close()
-	//	//time.Sleep(5 * time.Second)
-	//	io.WriteString(stdin, fmt.Sprintf("%s\n%s\n", username, password))
-	//}()
-	//stderr, err := cmd.StderrPipe()
-	err = openvpnCmd.Run(); if err != nil {
 		return fmt.Errorf("could not start openvpn deamon (system log should contain hints as to why): %w", err)
 	}
-	//fmt.Printf("%s\n", out)
 
 	fmt.Println("Done! OpenVPN should be up. If not check the system log.")
 
 	return nil
 }
 
-var vpnStopCmd = &cobra.Command{
-	Use:   "stop <domain>",
-	Args:  exactAndValidArgs,
-	Short: "Stop OpenVPN",
-	Long: `Stop given OpenVPN configuration.
-`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Stopping VPN...")
-	},
-	ValidArgs: validDomains,
+func stopVPN(domain string) error {
+	confDir := filepath.Join("/tmp/scripts-vpn/", domain)
+	pidPath := filepath.Join(confDir, "lock.pid")
+
+	pid, err := getPid(pidPath)
+	if err != nil {
+		return fmt.Errorf("cannot check pid of potenially running openvpn instance: %w", err)
+	}
+
+	if pid == -1 {
+		fmt.Printf("No OpenVPN instance for %s seems to be running\n", domain)
+		return nil
+	}
+
+	fmt.Printf("Stopping OpenVPN instance for %s with pid %d\n", domain, pid)
+	if err := cacheSudo(); err != nil {
+		return fmt.Errorf("could not gain super user priviliges: %w", err)
+	}
+
+	killCmd := exec.Command("sudo", "kill", fmt.Sprintf("%d", pid))
+	if err := killCmd.Run(); err != nil {
+		return fmt.Errorf("could not kill vpn instance: %w", err)
+	}
+	fmt.Println("Done!")
+	return nil
 }
 
-var vpnPsCmd = &cobra.Command{
-	Use:   "ps",
-	Short: "List running VPN connections",
-	Long: `
-`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("ps:")
-	},
+func psVPN() error {
+	for _, domain := range validDomains {
+		confDir := filepath.Join("/tmp/scripts-vpn/", domain)
+		pidPath := filepath.Join(confDir, "lock.pid")
+		pid, err := getPid(pidPath)
+		if err != nil {
+			return fmt.Errorf("cannot check pid of potenially running openvpn instance: %w", err)
+		}
+		if pid != -1 {
+			fmt.Printf("%s: Running with pid %d\n", domain, pid)
+		}
+	}
+	return nil
 }
 
 func init() {
@@ -351,6 +375,33 @@ func init() {
 		ValidArgs: validDomains,
 	}
 
+	var vpnStopCmd = &cobra.Command{
+		Use:   "stop <domain>",
+		Args:  exactAndValidArgs,
+		Short: "Stop OpenVPN",
+		Long: `Stop given OpenVPN configuration.
+`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := stopVPN(args[0]); err != nil {
+				fmt.Print("Could not stop VPN: ")
+				fmt.Println(err)
+			}
+		},
+		ValidArgs: validDomains,
+	}
+
+	var vpnPsCmd = &cobra.Command{
+		Use:   "ps",
+		Short: "List running VPN connections",
+		Long: `
+`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := psVPN(); err != nil {
+				fmt.Print("Could not get running VPNs: ")
+				fmt.Println(err)
+			}
+		},
+	}
 
 	rootCmd.AddCommand(vpnCmd)
 	vpnCmd.AddCommand(vpnStartCmd)
