@@ -338,6 +338,11 @@ func stopVPN(domain string) error {
 	if err := killCmd.Run(); err != nil {
 		return fmt.Errorf("could not kill vpn instance: %w", err)
 	}
+
+	if err := os.RemoveAll(confDir); err != nil {
+		return fmt.Errorf("could not delete conf dir: %w", err)
+	}
+
 	fmt.Println("Done!")
 	return nil
 }
