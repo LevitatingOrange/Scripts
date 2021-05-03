@@ -157,10 +157,13 @@ func createVPNFolder(confDir string, pidPath string, domain string, ips []string
 
 	config = append([]byte(fmt.Sprintf("daemon openvpn-%s\ncd %s\nwritepid %s\nsuppress-timestamps\nnobind\nauth-user-pass creds.txt\n\n", domain, confDir, pidPath)), config...)
 
-	config = append(config, []byte("\nroute-nopull\n")...)
-	for _, ip := range ips {
-		config = append(config, []byte(fmt.Sprintf("route %s 255.255.255.255\n", ip))...)
+	if ips != nil && len(ips) > 0 {
+		config = append(config, []byte("\nroute-nopull\n")...)
+		for _, ip := range ips {
+			config = append(config, []byte(fmt.Sprintf("route %s 255.255.255.255\n", ip))...)
+		}
 	}
+
 	if err := os.WriteFile(filepath.Join(confDir, "conf.ovpn"), config, 0600); err != nil {
 		return "", fmt.Errorf("could not write config file: %w", err)
 	}
@@ -209,7 +212,14 @@ func getPid(pidPath string) (int64, error) {
 	}
 }
 
+var useAllHosts bool
+
 func startVPN(domain string) error {
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("could not got home directory: %w", err)
+	}
+
 	confDir := filepath.Join("/tmp/scripts-vpn/", domain)
 	pidPath := filepath.Join(confDir, "lock.pid")
 
@@ -224,27 +234,30 @@ func startVPN(domain string) error {
 	}
 
 	fmt.Println("Starting VPN...")
-	homedir, err := os.UserHomeDir()
-	if err != nil {
-		return fmt.Errorf("could not got home directory: %w", err)
-	}
-	servers, err := getServersFromKnownHosts(homedir, domain, additionalHosts)
-	if err != nil {
-		return fmt.Errorf("could not get hosts: %w", err)
-	}
-	ips := make([]string, 0, len(servers)+len(additionalIPs))
-	ips = append(ips, additionalIPs...)
 
-	fmt.Println("Using servers:")
-	for server, ip := range servers {
-		fmt.Printf("%s -> %s\n", server, ip)
-		ips = append(ips, ip)
-	}
-	if len(additionalIPs) > 0 {
-		fmt.Println("And additional IPs: ")
-	}
-	for _, ip := range additionalIPs {
-		fmt.Printf("%s\n", ip)
+	var ips []string
+
+	if !useAllHosts {
+		servers, err := getServersFromKnownHosts(homedir, domain, additionalHosts)
+		if err != nil {
+			return fmt.Errorf("could not get hosts: %w", err)
+		}
+		ips = make([]string, 0, len(servers)+len(additionalIPs))
+		ips = append(ips, additionalIPs...)
+
+		fmt.Println("Using servers:")
+		for server, ip := range servers {
+			fmt.Printf("%s -> %s\n", server, ip)
+			ips = append(ips, ip)
+		}
+		if len(additionalIPs) > 0 {
+			fmt.Println("And additional IPs: ")
+		}
+		for _, ip := range additionalIPs {
+			fmt.Printf("%s\n", ip)
+		}
+	} else {
+		fmt.Println("Running normally without host selection...")
 	}
 
 	if passwordStorePath == "" {
@@ -297,7 +310,7 @@ func startVPN(domain string) error {
 	if err := os.WriteFile(filepath.Join(confPath, "creds.txt"), []byte(fmt.Sprintf("%s\n%s\n", username, password)), 0600); err != nil {
 		return fmt.Errorf("could not create creds file: %w", err)
 	}
-	//
+
 	defer os.Remove(filepath.Join(confPath, "creds.txt"))
 
 	if err = cacheSudo(); err != nil {
@@ -347,16 +360,37 @@ func stopVPN(domain string) error {
 	return nil
 }
 
+var shouldCleanDeadPidFile bool
+
 func psVPN() error {
 	for _, domain := range validDomains {
 		confDir := filepath.Join("/tmp/scripts-vpn/", domain)
 		pidPath := filepath.Join(confDir, "lock.pid")
 		pid, err := getPid(pidPath)
 		if err != nil {
-			return fmt.Errorf("cannot check pid of potenially running openvpn instance: %w", err)
+			return fmt.Errorf("cannot get pid of potentially running openvpn instance: %w", err)
 		}
+
 		if pid != -1 {
-			fmt.Printf("%s: Running with pid %d\n", domain, pid)
+			if err := cacheSudo(); err != nil {
+				return fmt.Errorf("could not gain super user priviliges: %w", err)
+			}
+
+			checkPidCmd := exec.Command("sudo", "kill", "-0", fmt.Sprintf("%d", pid))
+			output, err := checkPidCmd.CombinedOutput()
+			if err != nil && strings.Contains(string(output), "No such process") {
+				fmt.Printf("%s: Open VPN should be running with pid %d, but isn't!\n", domain, pid)
+				if shouldCleanDeadPidFile {
+					if err := os.Remove(pidPath); err != nil {
+						return fmt.Errorf("cannot remove pid file: %w", err)
+					}
+					fmt.Printf("Removed pid file %s.\n", pidPath)
+				}
+			} else if err != nil {
+				return fmt.Errorf("cannot check pid (%d) of of potentially running openvpn instance %w", pid, err)
+			} else {
+				fmt.Printf("%s: Running with pid %d\n", domain, pid)
+			}
 		}
 	}
 	return nil
@@ -413,17 +447,9 @@ func init() {
 	vpnCmd.AddCommand(vpnStopCmd)
 	vpnCmd.AddCommand(vpnPsCmd)
 
+	vpnStartCmd.Flags().BoolVarP(&useAllHosts, "all", "a", false, "Run VPN normally without selecting only some hosts.")
 	vpnStartCmd.Flags().StringSliceVarP(&additionalHosts, "hosts", "s", []string{}, "Additional hosts to include in VPN config.\nShould be the DNS-resolvable hostname.\nCan be specified multiple times or as a comma-separated list.")
-	vpnStartCmd.Flags().StringSliceVarP(&additionalIPs, "ips", "i", []string{}, "Additional ips to include in VPN config.\nCan be specified multiple times or as a comma-separated list.")
+	vpnStartCmd.Flags().StringSliceVarP(&additionalIPs, "ips", "i", []string{}, "Additional ips to include in VPN config.\nCan be specified multiple times or as a comma-separated list")
 	vpnStartCmd.Flags().StringVarP(&passwordPath, "password_file", "p", "", "Path to gpg-encrypted password file (unix pass style). Will look in ~/.password-store if not provided")
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// vpnCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// vpnCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	vpnPsCmd.Flags().BoolVarP(&shouldCleanDeadPidFile, "clean", "c", false, "If a pid file for an OpenVPN instance exists, \nbut no process seems to be running\nunder that pid, delete PID file")
 }
