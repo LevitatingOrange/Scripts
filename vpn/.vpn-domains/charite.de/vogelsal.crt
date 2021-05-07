@@ -1,0 +1,97 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 16093 (0x3edd)
+    Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C=DE, ST=Berlin, L=Berlin, O=Charite-VPN, OU=GB-IT, CN=Charite-VPN CA/name=EasyRSA/emailAddress=vpn@charite.de
+        Validity
+            Not Before: Apr 12 09:10:06 2018 GMT
+            Not After : Apr  9 09:10:06 2028 GMT
+        Subject: C=DE, ST=Berlin, L=Berlin, O=Charite-VPN, OU=GB-IT, CN=vogelsal/emailAddress=vpn@charite.de
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:bd:ad:60:51:e5:15:e0:f4:f2:c0:1c:7a:c2:57:
+                    53:95:71:c6:f0:60:6c:06:99:82:13:be:dd:6e:e1:
+                    ce:c7:bb:6f:43:87:94:2f:c2:7a:63:7a:8c:e7:76:
+                    e5:8b:e3:9d:14:7c:46:e2:19:32:37:b9:81:49:bd:
+                    a8:fd:f7:6c:5c:27:42:b7:03:9c:76:b8:9a:a2:47:
+                    81:c8:a5:bb:33:25:5c:ca:0d:69:3c:bd:3c:9c:4e:
+                    8a:6e:fa:d2:e4:33:15:74:e5:ca:2c:45:7d:26:2f:
+                    b0:1d:67:e9:d1:16:1a:8a:ae:83:89:85:62:eb:b9:
+                    c4:e1:27:be:ec:84:d3:ff:8d:96:b7:dc:37:97:f8:
+                    e8:90:5b:7a:1c:f0:ee:b0:a1:db:27:a6:2b:67:4b:
+                    39:1a:cc:fb:da:51:5d:8b:df:b2:5b:0c:ca:1d:05:
+                    56:ac:ca:66:0e:58:6f:cb:cb:b4:28:29:eb:7f:56:
+                    cd:a9:ce:13:1b:64:82:17:06:73:ac:c4:a3:04:82:
+                    cd:15:6b:f1:80:13:73:79:e3:98:14:a0:31:25:b5:
+                    1d:cc:17:4c:c5:1e:c0:99:32:26:7e:77:a7:2c:5a:
+                    3f:ad:45:38:bb:14:ef:cb:85:47:f0:de:c8:e6:04:
+                    eb:51:78:bd:0c:a4:fe:e7:14:14:d7:26:ed:a1:60:
+                    dd:fb
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            Netscape Comment: 
+                Easy-RSA Generated Certificate
+            X509v3 Subject Key Identifier: 
+                02:C9:F5:8E:77:84:FD:5B:E4:BA:0E:24:BD:69:BD:AC:7A:F0:F7:92
+            X509v3 Authority Key Identifier: 
+                keyid:10:65:59:FB:70:DB:E1:92:C8:39:9C:84:A0:FD:00:AB:A3:F2:CA:DC
+                DirName:/C=DE/ST=Berlin/L=Berlin/O=Charite-VPN/OU=GB-IT/CN=Charite-VPN CA/name=EasyRSA/emailAddress=vpn@charite.de
+                serial:B8:28:31:2F:58:94:16:93
+
+            X509v3 Extended Key Usage: 
+                TLS Web Client Authentication
+            X509v3 Key Usage: 
+                Digital Signature
+            X509v3 Subject Alternative Name: 
+                DNS:vogelsal
+    Signature Algorithm: sha256WithRSAEncryption
+         90:52:59:40:09:98:cd:19:5b:09:19:7d:42:5a:96:fe:3c:43:
+         02:46:d4:65:b5:56:05:6a:f5:d7:4e:7c:2d:cb:cb:99:32:a4:
+         4f:22:e6:a5:e1:77:eb:d8:e7:45:16:e2:18:b4:17:e0:5c:96:
+         4d:f7:7b:87:3d:cc:c6:79:9e:07:b7:78:33:eb:ad:40:13:3d:
+         8d:d7:5b:60:30:a6:26:4a:e9:a4:bc:e8:cf:1f:24:1c:d0:1f:
+         28:91:74:f7:3d:00:d3:ff:9d:2c:7b:fd:77:3d:e2:c7:71:36:
+         03:66:82:8e:a6:aa:eb:1d:1f:d1:22:dc:6a:54:43:f9:63:d8:
+         13:42:3e:8c:b7:a8:68:54:17:39:d3:8f:0d:20:b1:da:b8:1f:
+         30:2b:0a:6b:9c:a8:42:5f:9b:ac:21:7a:80:b4:61:20:b4:e2:
+         2f:3e:18:46:4f:88:9b:99:d1:8a:bc:16:96:10:4f:54:f1:f1:
+         73:d8:c5:45:aa:ab:f7:d3:7a:d9:e0:cc:30:8d:91:79:3b:54:
+         64:69:59:88:1b:83:97:73:64:b8:75:31:ad:4c:e1:b5:7e:d7:
+         bf:0f:be:48:77:89:11:d2:b5:a2:8d:42:ea:82:ab:62:a7:eb:
+         68:59:09:d4:3e:7e:cc:14:50:b9:20:9a:08:cb:5e:64:1a:d2:
+         1c:ff:32:5a
+-----BEGIN CERTIFICATE-----
+MIIFETCCA/mgAwIBAgICPt0wDQYJKoZIhvcNAQELBQAwgZ8xCzAJBgNVBAYTAkRF
+MQ8wDQYDVQQIEwZCZXJsaW4xDzANBgNVBAcTBkJlcmxpbjEUMBIGA1UEChMLQ2hh
+cml0ZS1WUE4xDjAMBgNVBAsTBUdCLUlUMRcwFQYDVQQDEw5DaGFyaXRlLVZQTiBD
+QTEQMA4GA1UEKRMHRWFzeVJTQTEdMBsGCSqGSIb3DQEJARYOdnBuQGNoYXJpdGUu
+ZGUwHhcNMTgwNDEyMDkxMDA2WhcNMjgwNDA5MDkxMDA2WjCBhzELMAkGA1UEBhMC
+REUxDzANBgNVBAgTBkJlcmxpbjEPMA0GA1UEBxMGQmVybGluMRQwEgYDVQQKEwtD
+aGFyaXRlLVZQTjEOMAwGA1UECxMFR0ItSVQxETAPBgNVBAMTCHZvZ2Vsc2FsMR0w
+GwYJKoZIhvcNAQkBFg52cG5AY2hhcml0ZS5kZTCCASIwDQYJKoZIhvcNAQEBBQAD
+ggEPADCCAQoCggEBAL2tYFHlFeD08sAcesJXU5VxxvBgbAaZghO+3W7hzse7b0OH
+lC/CemN6jOd25YvjnRR8RuIZMje5gUm9qP33bFwnQrcDnHa4mqJHgciluzMlXMoN
+aTy9PJxOim760uQzFXTlyixFfSYvsB1n6dEWGoqug4mFYuu5xOEnvuyE0/+Nlrfc
+N5f46JBbehzw7rCh2yemK2dLORrM+9pRXYvfslsMyh0FVqzKZg5Yb8vLtCgp639W
+zanOExtkghcGc6zEowSCzRVr8YATc3njmBSgMSW1HcwXTMUewJkyJn53pyxaP61F
+OLsU78uFR/DeyOYE61F4vQyk/ucUFNcm7aFg3fsCAwEAAaOCAWswggFnMAkGA1Ud
+EwQCMAAwLQYJYIZIAYb4QgENBCAWHkVhc3ktUlNBIEdlbmVyYXRlZCBDZXJ0aWZp
+Y2F0ZTAdBgNVHQ4EFgQUAsn1jneE/Vvkug4kvWm9rHrw95IwgdQGA1UdIwSBzDCB
+yYAUEGVZ+3Db4ZLIOZyEoP0Aq6PyytyhgaWkgaIwgZ8xCzAJBgNVBAYTAkRFMQ8w
+DQYDVQQIEwZCZXJsaW4xDzANBgNVBAcTBkJlcmxpbjEUMBIGA1UEChMLQ2hhcml0
+ZS1WUE4xDjAMBgNVBAsTBUdCLUlUMRcwFQYDVQQDEw5DaGFyaXRlLVZQTiBDQTEQ
+MA4GA1UEKRMHRWFzeVJTQTEdMBsGCSqGSIb3DQEJARYOdnBuQGNoYXJpdGUuZGWC
+CQC4KDEvWJQWkzATBgNVHSUEDDAKBggrBgEFBQcDAjALBgNVHQ8EBAMCB4AwEwYD
+VR0RBAwwCoIIdm9nZWxzYWwwDQYJKoZIhvcNAQELBQADggEBAJBSWUAJmM0ZWwkZ
+fUJalv48QwJG1GW1VgVq9ddOfC3Ly5kypE8i5qXhd+vY50UW4hi0F+Bclk33e4c9
+zMZ5nge3eDPrrUATPY3XW2AwpiZK6aS86M8fJBzQHyiRdPc9ANP/nSx7/Xc94sdx
+NgNmgo6mqusdH9Ei3GpUQ/lj2BNCPoy3qGhUFznTjw0gsdq4HzArCmucqEJfm6wh
+eoC0YSC04i8+GEZPiJuZ0Yq8FpYQT1Tx8XPYxUWqq/fTetngzDCNkXk7VGRpWYgb
+g5dzZLh1Ma1M4bV+178Pvkh3iRHStaKNQuqCq2Kn62hZCdQ+fswUULkgmgjLXmQa
+0hz/Mlo=
+-----END CERTIFICATE-----
