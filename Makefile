@@ -10,4 +10,5 @@ completion:
 	bin/scripts completion zsh > _scripts
 
 copy_domains:
-	cp -Lr ~/.vpn-domains cmd/domains
+	rm -r cmd/domains/
+	cp -Lr ~/.vpn-domains/ cmd/domains/
