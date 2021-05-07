@@ -8,3 +8,6 @@ clean:
 
 completion:
 	bin/scripts completion zsh > _scripts_completion
+
+copy_domains:
+	cp -r ~/.vpn-domains cmd/domains
