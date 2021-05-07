@@ -268,15 +268,18 @@ func startVPN(domain string) error {
 	}
 
 	if passwordPath == "" {
+
 		//files := []string{}
 		err := filepath.Walk(passwordStorePath, func(path string, info fs.FileInfo, err error) error {
+			fmt.Printf("%s\n",path)
 			if err != nil {
 				return err
 			}
 
 			fname := info.Name()
 			if fname == ".git" {
-				return filepath.SkipDir
+				// [TODO] avoid going through .git folder
+				//return filepath.SkipDir
 			}
 
 			if !info.IsDir() && filepath.Ext(fname) == ".gpg" {
