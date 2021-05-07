@@ -1,3 +1,5 @@
 scripts
+bin
+_scripts_completion
 .idea
 cmd/domains

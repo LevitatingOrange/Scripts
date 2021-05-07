@@ -41,12 +41,10 @@ a multitude of websites like Stackoverflow or Github, which is pretty annoying
 for any computer engineer as you might imagine. This tool aims to alleviate this. 
 It  will configure and start, and stop an openvpn client that only 
 tunnels connections to servers that belong to the vpn's domain. By default it also
-uses the pass command to gather credentials for the connection. It looks for 
-a VPN directory and search any 
-
+uses the pass command to gather credentials for the connection.
 Domains are specified at compile time in the domains/ directory as 
-a folder which contains the base OpenVPN config (the one you use normally)
-and 
+a folder which contains the base OpenVPN config and any files (like certificates)
+that are read in the config file.
 `,
 	//Run: func(cmd *cobra.Command, args []string) {
 	//	fmt.Println("vpn called")
