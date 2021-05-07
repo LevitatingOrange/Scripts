@@ -271,7 +271,6 @@ func startVPN(domain string) error {
 
 		//files := []string{}
 		err := filepath.Walk(passwordStorePath, func(path string, info fs.FileInfo, err error) error {
-			fmt.Printf("%s\n",path)
 			if err != nil {
 				return err
 			}
